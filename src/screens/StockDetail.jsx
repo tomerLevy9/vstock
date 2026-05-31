@@ -5,6 +5,7 @@ import { getStock } from '../data/stocks.js'
 import { money, pct, signClass, arrow } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 import TradeModal from '../components/TradeModal.jsx'
+import PriceChart from '../components/PriceChart.jsx'
 
 export default function StockDetail({ onToast }) {
   const { ticker } = useParams()
@@ -47,6 +48,8 @@ export default function StockDetail({ onToast }) {
         <div style={{ fontSize: 38, fontWeight: 700, margin: '8px 0 2px' }}>{money(price)}</div>
         <span className={`pill ${signClass(change)}`}>{arrow(change)} {pct(change)} today</span>
       </div>
+
+      <PriceChart ticker={ticker} currentPrice={price} />
 
       <div className="info-box" style={{ marginTop: 14 }}>
         {stock.blurb}
