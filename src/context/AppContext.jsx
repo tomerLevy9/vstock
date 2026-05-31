@@ -1,12 +1,13 @@
 // Global app state: accounts (local-only), the logged-in user's portfolio,
-// live prices, and the buy/sell logic. Everything persists to localStorage.
+// custom-added stocks, follows/favorites, live prices, and the buy/sell logic.
+// Everything persists to localStorage.
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { STOCKS, getStock } from '../data/stocks.js'
-import { fetchAllPrices } from '../services/prices.js'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { STOCKS as BASE_STOCKS, getStock, registerStock } from '../data/stocks.js'
+import { fetchAllPrices, lookupStock } from '../services/prices.js'
 
 const STARTING_CASH = 50000
-const PRICE_REFRESH_MS = 30000 // every 30s
+const PRICE_REFRESH_MS = 60000 // every 60s — stays under Finnhub's free 60 calls/min limit
 
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -24,6 +25,7 @@ const save = (key, value) => localStorage.setItem(key, JSON.stringify(value))
 
 const USERS_KEY = 'stockstars_users'
 const SESSION_KEY = 'stockstars_session'
+const CUSTOM_KEY = 'stockstars_custom_stocks'
 const portfolioKey = (u) => `stockstars_portfolio_${u}`
 
 const freshPortfolio = () => ({
@@ -31,6 +33,7 @@ const freshPortfolio = () => ({
   holdings: {}, // ticker -> { shares, avgPrice }
   history: [], // { type:'buy'|'sell', ticker, shares, price, total, at }
   snapshots: [], // { at, value } portfolio value over time
+  follows: [], // tickers the user follows
 })
 
 export function AppProvider({ children }) {
@@ -39,16 +42,29 @@ export function AppProvider({ children }) {
   const [portfolio, setPortfolio] = useState(() =>
     username ? load(portfolioKey(username), freshPortfolio()) : null,
   )
+  // Custom stocks the user added. Register them synchronously so getStock() works everywhere.
+  const [customStocks, setCustomStocks] = useState(() => {
+    const list = load(CUSTOM_KEY, [])
+    list.forEach(registerStock)
+    return list
+  })
   const [prices, setPrices] = useState({})
   const [pricesLoaded, setPricesLoaded] = useState(false)
+
+  const allStocks = useMemo(() => [...BASE_STOCKS, ...customStocks], [customStocks])
+
+  // Keep the current ticker list in a ref so the polling interval always sees the
+  // latest set (including newly-added stocks) without restarting.
+  const tickersRef = useRef([])
+  tickersRef.current = allStocks.map((s) => s.ticker)
 
   // ---- price polling ------------------------------------------------------
   useEffect(() => {
     let alive = true
     const tick = async () => {
-      const p = await fetchAllPrices()
+      const p = await fetchAllPrices(tickersRef.current)
       if (!alive) return
-      setPrices(p)
+      setPrices((prev) => ({ ...prev, ...p }))
       setPricesLoaded(true)
     }
     tick()
@@ -108,7 +124,9 @@ export function AppProvider({ children }) {
       if (!u || u.password !== password) return { error: 'Wrong username or password.' }
       setUsername(key)
       save(SESSION_KEY, key)
-      setPortfolio(load(portfolioKey(key), freshPortfolio()))
+      const p = load(portfolioKey(key), freshPortfolio())
+      if (!p.follows) p.follows = [] // migrate older saves
+      setPortfolio(p)
       return { ok: true }
     },
     [users],
@@ -126,6 +144,37 @@ export function AppProvider({ children }) {
     p.snapshots.push({ at: Date.now(), value: STARTING_CASH })
     setPortfolio(p)
   }, [username])
+
+  // ---- custom stocks (add any real stock/ETF) -----------------------------
+  const addStockBySymbol = useCallback(async (symbol, fallbackName) => {
+    const t = symbol.trim().toUpperCase()
+    if (!t) return { error: 'Type a stock symbol.' }
+    if (getStock(t)) return { error: `${t} is already in your market!` }
+    const res = await lookupStock(t, fallbackName)
+    if (res.error) return res
+    registerStock(res.stock)
+    setCustomStocks((prev) => {
+      const next = [...prev, res.stock]
+      save(CUSTOM_KEY, next)
+      return next
+    })
+    setPrices((prev) => ({ ...prev, [t]: res.price }))
+    return { ok: true, stock: res.stock }
+  }, [])
+
+  // ---- follows / favorites ------------------------------------------------
+  const toggleFollow = useCallback((ticker) => {
+    setPortfolio((p) => {
+      const cur = p.follows || []
+      const follows = cur.includes(ticker) ? cur.filter((x) => x !== ticker) : [...cur, ticker]
+      return { ...p, follows }
+    })
+  }, [])
+
+  const isFollowing = useCallback(
+    (ticker) => (portfolio?.follows || []).includes(ticker),
+    [portfolio],
+  )
 
   // ---- trading ------------------------------------------------------------
   const priceOf = useCallback(
@@ -189,7 +238,7 @@ export function AppProvider({ children }) {
 
   const value = {
     STARTING_CASH,
-    STOCKS,
+    STOCKS: allStocks,
     users,
     username,
     displayName: username ? users[username]?.name : null,
@@ -201,6 +250,10 @@ export function AppProvider({ children }) {
     stocksValue,
     total,
     totalGain,
+    follows: portfolio?.follows || [],
+    isFollowing,
+    toggleFollow,
+    addStockBySymbol,
     signup,
     login,
     logout,

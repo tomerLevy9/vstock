@@ -9,7 +9,7 @@ import TradeModal from '../components/TradeModal.jsx'
 export default function StockDetail({ onToast }) {
   const { ticker } = useParams()
   const navigate = useNavigate()
-  const { prices, priceOf, portfolio } = useApp()
+  const { prices, priceOf, portfolio, isFollowing, toggleFollow } = useApp()
   const [trade, setTrade] = useState(null) // 'buy' | 'sell' | null
 
   const stock = getStock(ticker)
@@ -25,9 +25,18 @@ export default function StockDetail({ onToast }) {
 
   return (
     <div className="page">
-      <button className="btn secondary" style={{ width: 'auto', padding: '8px 16px', marginBottom: 12 }} onClick={() => navigate(-1)}>
-        ← Back
-      </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <button className="btn secondary" style={{ width: 'auto', padding: '8px 16px' }} onClick={() => navigate(-1)}>
+          ← Back
+        </button>
+        <button
+          className="btn secondary"
+          style={{ width: 'auto', padding: '8px 16px' }}
+          onClick={() => toggleFollow(ticker)}
+        >
+          {isFollowing(ticker) ? '⭐ Following' : '☆ Follow'}
+        </button>
+      </div>
 
       <div className="card center">
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>

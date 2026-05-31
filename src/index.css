@@ -209,3 +209,18 @@ a { color: inherit; text-decoration: none; }
 
 .empty { text-align: center; color: var(--ink-soft); padding: 30px 10px; }
 .empty .big { font-size: 40px; }
+
+/* ---- segmented control (All / Following) ---- */
+.seg { display: flex; background: #ece9fb; border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+.seg button {
+  flex: 1; border: none; background: transparent; padding: 10px;
+  border-radius: 11px; font-weight: 600; color: var(--ink-soft); font-size: 15px;
+}
+.seg button.active { background: #fff; color: var(--purple); box-shadow: var(--shadow); }
+
+/* ---- follow star button ---- */
+.star-btn {
+  border: none; background: transparent; font-size: 24px; line-height: 1;
+  padding: 6px 4px 6px 8px; flex: none; color: var(--yellow);
+}
+.star-btn:active { transform: scale(1.2); }

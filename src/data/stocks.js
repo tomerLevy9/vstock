@@ -1,4 +1,7 @@
-// The curated list of kid-friendly real companies StockStars lets you trade.
+// The curated starter list of kid-friendly real companies.
+// Users can also add ANY other real stock/ETF (e.g. QQQ) from the Market page;
+// those get registered at runtime so the rest of the app can look them up too.
+//
 // `base` is a realistic stand-in price used until live prices load (or if no API key).
 // `domain` is used to fetch the company logo. `blurb` explains the company in kid terms.
 
@@ -25,14 +28,27 @@ export const STOCKS = [
   { ticker: 'BBW',   name: 'Build-A-Bear', domain: 'buildabear.com', color: '#5b2d8e', base: 38.70,  blurb: 'Where you make your own teddy bear. 🧸' },
 ]
 
-export const TICKERS = STOCKS.map((s) => s.ticker)
-
+// Runtime registry: starts with the curated list, grows as users add custom stocks.
 const BY_TICKER = Object.fromEntries(STOCKS.map((s) => [s.ticker, s]))
+
+export function registerStock(stock) {
+  if (!BY_TICKER[stock.ticker]) BY_TICKER[stock.ticker] = stock
+}
 
 export function getStock(ticker) {
   return BY_TICKER[ticker]
 }
 
 export function logoUrl(stock) {
-  return `https://logo.clearbit.com/${stock.domain}`
+  if (stock.logo) return stock.logo
+  if (stock.domain) return `https://logo.clearbit.com/${stock.domain}`
+  return '' // triggers the colored-initials fallback in StockLogo
+}
+
+// Stable color for custom-added stocks (so each gets a consistent fallback badge color).
+const PALETTE = ['#6c5ce7', '#e8242c', '#1db954', '#ff9900', '#0078d4', '#e60012', '#a81612', '#5b2d8e', '#00a6e2', '#f4a000']
+export function colorFor(ticker) {
+  let h = 0
+  for (const c of ticker) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return PALETTE[h % PALETTE.length]
 }
