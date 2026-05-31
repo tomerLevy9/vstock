@@ -26,7 +26,16 @@ const save = (key, value) => localStorage.setItem(key, JSON.stringify(value))
 const USERS_KEY = 'stockstars_users'
 const SESSION_KEY = 'stockstars_session'
 const CUSTOM_KEY = 'stockstars_custom_stocks'
+const SNAPFIX_KEY = 'stockstars_snapfix_v2' // one-time cleanup of bug-induced chart jitter
 const portfolioKey = (u) => `stockstars_portfolio_${u}`
+
+// Load a portfolio, applying small migrations (follows field, one-time snapshot cleanup).
+const loadPortfolio = (key) => {
+  const p = load(portfolioKey(key), freshPortfolio())
+  if (!p.follows) p.follows = []
+  if (!localStorage.getItem(SNAPFIX_KEY)) p.snapshots = [] // drop jittery intraday history once
+  return p
+}
 
 const freshPortfolio = () => ({
   cash: STARTING_CASH,
@@ -39,9 +48,7 @@ const freshPortfolio = () => ({
 export function AppProvider({ children }) {
   const [users, setUsers] = useState(() => load(USERS_KEY, {}))
   const [username, setUsername] = useState(() => load(SESSION_KEY, null))
-  const [portfolio, setPortfolio] = useState(() =>
-    username ? load(portfolioKey(username), freshPortfolio()) : null,
-  )
+  const [portfolio, setPortfolio] = useState(() => (username ? loadPortfolio(username) : null))
   // Custom stocks the user added. Register them synchronously so getStock() works everywhere.
   const [customStocks, setCustomStocks] = useState(() => {
     const list = load(CUSTOM_KEY, [])
@@ -50,6 +57,11 @@ export function AppProvider({ children }) {
   })
   const [prices, setPrices] = useState({})
   const [pricesLoaded, setPricesLoaded] = useState(false)
+
+  // Mark the one-time snapshot cleanup as done so it doesn't re-run next session.
+  useEffect(() => {
+    localStorage.setItem(SNAPFIX_KEY, '1')
+  }, [])
 
   const allStocks = useMemo(() => [...BASE_STOCKS, ...customStocks], [customStocks])
 
@@ -124,9 +136,7 @@ export function AppProvider({ children }) {
       if (!u || u.password !== password) return { error: 'Wrong username or password.' }
       setUsername(key)
       save(SESSION_KEY, key)
-      const p = load(portfolioKey(key), freshPortfolio())
-      if (!p.follows) p.follows = [] // migrate older saves
-      setPortfolio(p)
+      setPortfolio(loadPortfolio(key))
       return { ok: true }
     },
     [users],

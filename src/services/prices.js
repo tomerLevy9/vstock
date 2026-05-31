@@ -9,8 +9,13 @@ const KEY = import.meta.env.VITE_FINNHUB_KEY
 export const hasRealPrices = () => Boolean(KEY)
 const API = 'https://finnhub.io/api/v1'
 
-// Mutable simulated state so placeholder prices drift a little each refresh.
+// Mutable simulated state so placeholder prices drift a little each refresh (demo mode only).
 const simPrice = {}
+
+// Last successfully-fetched real quote per ticker. On a rate-limited/failed poll we
+// carry this forward (instead of randomizing), so prices stay flat when the market is
+// closed rather than jittering.
+const lastGood = {}
 
 function baseOf(ticker) {
   return getStock(ticker)?.base ?? 100
@@ -50,16 +55,20 @@ async function fetchProfile(ticker) {
 }
 
 // Fetch quotes for the given tickers. Returns { TICKER: {price, change, changePct} }.
-// Falls back to simulated prices per-ticker on any error or when no key is set.
+// In demo mode (no key) prices are simulated. With a key, a failed/rate-limited fetch
+// carries forward the last known real price so values don't jitter when the market is closed.
 export async function fetchAllPrices(tickers) {
   if (!tickers.length) return {}
   if (!hasRealPrices()) return simulate(tickers)
   const entries = await Promise.all(
     tickers.map(async (t) => {
       try {
-        return [t, await fetchQuote(t)]
+        const q = await fetchQuote(t)
+        lastGood[t] = q
+        return [t, q]
       } catch {
-        return [t, simulateOne(t)]
+        // Rate-limited or error: reuse the last good price, or a flat base on first load.
+        return [t, lastGood[t] ?? { price: baseOf(t), change: 0, changePct: 0 }]
       }
     }),
   )
