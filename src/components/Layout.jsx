@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext.jsx'
 const TABS = [
   { to: '/', ic: '🏠', label: 'Home', end: true },
   { to: '/market', ic: '🛒', label: 'Market' },
+  { to: '/learn', ic: '🎓', label: 'Learn' },
   { to: '/history', ic: '📜', label: 'History' },
   { to: '/profile', ic: '🧑‍🚀', label: 'Me' },
 ]

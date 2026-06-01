@@ -8,6 +8,7 @@ import Market from './screens/Market.jsx'
 import StockDetail from './screens/StockDetail.jsx'
 import History from './screens/History.jsx'
 import Profile from './screens/Profile.jsx'
+import Learn from './screens/Learn.jsx'
 
 export default function App() {
   const { username } = useApp()
@@ -28,6 +29,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Portfolio />} />
           <Route path="/market" element={<Market />} />
+          <Route path="/learn" element={<Learn onToast={setToast} />} />
           <Route path="/stock/:ticker" element={<StockDetail onToast={setToast} />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />

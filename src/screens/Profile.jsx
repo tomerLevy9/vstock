@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
 import { money, pct } from '../utils/format.js'
+import { LESSONS } from '../data/lessons.js'
 
 export default function Profile() {
-  const { displayName, avatar, total, totalGain, STARTING_CASH, logout, resetAccount, portfolio } = useApp()
+  const { displayName, avatar, total, totalGain, STARTING_CASH, logout, resetAccount, portfolio, isLessonDone, lessonsDone } = useApp()
   const [confirmReset, setConfirmReset] = useState(false)
   const gainPct = (totalGain / STARTING_CASH) * 100
   const trades = portfolio.history.length
@@ -34,6 +35,19 @@ export default function Profile() {
       </div>
 
       <div className="card" style={{ marginTop: 14 }}>
+        <div className="muted" style={{ fontSize: 14, marginBottom: 10 }}>
+          🎓 My Badges ({lessonsDone.length}/{LESSONS.length})
+        </div>
+        <div className="badges">
+          {LESSONS.map((l) => (
+            <div key={l.id} className={`badge ${isLessonDone(l.id) ? '' : 'locked'}`} title={l.title}>
+              {l.badge}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 14 }}>
         <div className="muted" style={{ fontSize: 14, marginBottom: 6 }}>🏆 Leaderboard</div>
         <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
           Coming soon! Soon you'll be able to see who has the best portfolio of all the StockStars. ✨
@@ -43,7 +57,7 @@ export default function Profile() {
       <div style={{ marginTop: 18 }}>
         {confirmReset ? (
           <div className="card">
-            <p className="center" style={{ marginTop: 0 }}>Start over with a fresh $50,000? This erases your stocks and history.</p>
+            <p className="center" style={{ marginTop: 0 }}>Start over with a fresh $1,000? This erases your stocks and history.</p>
             <div className="btn-row">
               <button className="btn secondary" onClick={() => setConfirmReset(false)}>Keep playing</button>
               <button className="btn sell" onClick={() => { resetAccount(); setConfirmReset(false) }}>Reset</button>

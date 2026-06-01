@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, us
 import { STOCKS as BASE_STOCKS, getStock, registerStock } from '../data/stocks.js'
 import { fetchAllPrices, lookupStock } from '../services/prices.js'
 
-const STARTING_CASH = 50000
+const STARTING_CASH = 1000
 const PRICE_REFRESH_MS = 60000 // every 60s — stays under Finnhub's free 60 calls/min limit
 
 const AppContext = createContext(null)
@@ -27,12 +27,22 @@ const USERS_KEY = 'stockstars_users'
 const SESSION_KEY = 'stockstars_session'
 const CUSTOM_KEY = 'stockstars_custom_stocks'
 const SNAPFIX_KEY = 'stockstars_snapfix_v2' // one-time cleanup of bug-induced chart jitter
+const RESTART_KEY = 'stockstars_restart_v1' // one-time fresh restart at the new $1,000 starting cash
 const portfolioKey = (u) => `stockstars_portfolio_${u}`
 
-// Load a portfolio, applying small migrations (follows field, one-time snapshot cleanup).
+// Load a portfolio, applying small migrations (follows field, one-time snapshot cleanup,
+// and a one-time fresh restart so everyone begins again with the new starting cash).
 const loadPortfolio = (key) => {
+  if (!localStorage.getItem(RESTART_KEY)) {
+    localStorage.setItem(RESTART_KEY, '1')
+    const fresh = freshPortfolio()
+    fresh.snapshots.push({ at: Date.now(), value: STARTING_CASH })
+    save(portfolioKey(key), fresh)
+    return fresh
+  }
   const p = load(portfolioKey(key), freshPortfolio())
   if (!p.follows) p.follows = []
+  if (!p.lessonsDone) p.lessonsDone = []
   if (!localStorage.getItem(SNAPFIX_KEY)) p.snapshots = [] // drop jittery intraday history once
   return p
 }
@@ -40,9 +50,10 @@ const loadPortfolio = (key) => {
 const freshPortfolio = () => ({
   cash: STARTING_CASH,
   holdings: {}, // ticker -> { shares, avgPrice }
-  history: [], // { type:'buy'|'sell', ticker, shares, price, total, at }
+  history: [], // { type:'buy'|'sell'|'reward', ticker, shares, price, total, at }
   snapshots: [], // { at, value } portfolio value over time
   follows: [], // tickers the user follows
+  lessonsDone: [], // ids of completed Learn & Earn lessons
 })
 
 export function AppProvider({ children }) {
@@ -65,16 +76,27 @@ export function AppProvider({ children }) {
 
   const allStocks = useMemo(() => [...BASE_STOCKS, ...customStocks], [customStocks])
 
-  // Keep the current ticker list in a ref so the polling interval always sees the
-  // latest set (including newly-added stocks) without restarting.
-  const tickersRef = useRef([])
-  tickersRef.current = allStocks.map((s) => s.ticker)
+  // Background polling only refreshes the stocks the user actually cares about
+  // (held + followed). This keeps us well under the API's rate limit and leaves
+  // plenty of headroom for searches/adds. The full browse list is refreshed on
+  // demand via refreshAllPrices() (e.g. when the Market screen opens).
+  const coreTickersRef = useRef([])
+  coreTickersRef.current = [
+    ...new Set([...Object.keys(portfolio?.holdings || {}), ...(portfolio?.follows || [])]),
+  ]
+
+  // Fetch prices for every stock once (used by the Market screen on mount).
+  const refreshAllPrices = useCallback(async () => {
+    const p = await fetchAllPrices(allStocks.map((s) => s.ticker))
+    setPrices((prev) => ({ ...prev, ...p }))
+    setPricesLoaded(true)
+  }, [allStocks])
 
   // ---- price polling ------------------------------------------------------
   useEffect(() => {
     let alive = true
     const tick = async () => {
-      const p = await fetchAllPrices(tickersRef.current)
+      const p = await fetchAllPrices(coreTickersRef.current)
       if (!alive) return
       setPrices((prev) => ({ ...prev, ...p }))
       setPricesLoaded(true)
@@ -186,6 +208,26 @@ export function AppProvider({ children }) {
     [portfolio],
   )
 
+  // ---- Learn & Earn -------------------------------------------------------
+  const isLessonDone = useCallback(
+    (id) => (portfolio?.lessonsDone || []).includes(id),
+    [portfolio],
+  )
+
+  const completeLesson = useCallback(
+    (lessonId, reward) => {
+      if ((portfolio?.lessonsDone || []).includes(lessonId)) return { already: true }
+      setPortfolio((p) => ({
+        ...p,
+        cash: round2(p.cash + reward),
+        lessonsDone: [...p.lessonsDone, lessonId],
+        history: [{ type: 'reward', lessonId, total: round2(reward), at: Date.now() }, ...p.history],
+      }))
+      return { ok: true, reward }
+    },
+    [portfolio],
+  )
+
   // ---- trading ------------------------------------------------------------
   const priceOf = useCallback(
     (ticker) => prices[ticker]?.price ?? getStock(ticker)?.base ?? 0,
@@ -257,12 +299,16 @@ export function AppProvider({ children }) {
     prices,
     pricesLoaded,
     priceOf,
+    refreshAllPrices,
     stocksValue,
     total,
     totalGain,
     follows: portfolio?.follows || [],
     isFollowing,
     toggleFollow,
+    lessonsDone: portfolio?.lessonsDone || [],
+    isLessonDone,
+    completeLesson,
     addStockBySymbol,
     signup,
     login,

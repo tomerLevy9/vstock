@@ -1,6 +1,6 @@
 # vStock — Virtual Stock Trader for Kids 🚀📈
 
-A fun, safe app where kids (ages 8–12) get $50,000 in pretend money and learn to
+A fun, safe app where kids (ages 8–12) get $1,000 in pretend money and learn to
 invest by buying and selling **real** company stocks at **real** market prices —
 with zero real-world risk.
 
@@ -8,13 +8,13 @@ with zero real-world risk.
 
 ## 1. The Idea
 
-- You sign up and get **$50,000 of virtual cash**.
+- You sign up and get **$1,000 of virtual cash**.
 - You browse **real companies kids know** (Apple, Disney, Roblox, Nintendo, Nike…)
   and see their **real, live-ish prices**.
 - You **buy** shares. The price you paid is remembered (your "cost").
 - Over time prices move. You watch your portfolio go **up 📈 or down 📉**.
 - You decide when to **sell** and lock in your gains (or losses).
-- The goal: grow your $50,000 into as much as you can — and learn how investing
+- The goal: grow your $1,000 into as much as you can — and learn how investing
   works along the way.
 
 **Later versions add:** options trading (advanced), and a **leaderboard** to see
@@ -37,7 +37,7 @@ Kids **8–12**. That means the UI is:
 
 **In v1:**
 - Username + password login & sign-up (local only).
-- $50,000 starting cash.
+- $1,000 starting cash.
 - Browse a curated list of ~20 kid-friendly real stocks with live prices.
 - Buy and sell stocks.
 - Portfolio dashboard: cash, total value, total gain/loss, holdings list, and a
@@ -99,14 +99,14 @@ Kids **8–12**. That means the UI is:
 - A simple list of every buy/sell with date, company, shares, and price.
 
 ### Screen 8 — Profile / Settings
-- Username, avatar, "Reset my account" (back to $50,000).
+- Username, avatar, "Reset my account" (back to $1,000).
 - Placeholder for the future **Leaderboard**.
 
 ---
 
 ## 5. How Money & Trades Work (the rules)
 
-- Everyone starts with **$50,000 cash**.
+- Everyone starts with **$1,000 cash**.
 - **Buy:** cost = shares × current price. Cash goes down, you gain shares. We record
   your average buy price ("cost basis").
 - **Sell:** you get shares × current price back as cash. Gain/loss = (sell price −

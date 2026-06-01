@@ -224,3 +224,34 @@ a { color: inherit; text-decoration: none; }
   padding: 6px 4px 6px 8px; flex: none; color: var(--yellow);
 }
 .star-btn:active { transform: scale(1.2); }
+
+/* ---- Learn & Earn ---- */
+.badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.badge {
+  width: 50px; height: 50px; border-radius: 15px; flex: none;
+  display: grid; place-items: center; font-size: 26px; background: #f1eeff;
+}
+.badge.locked { background: #f0eff5; filter: grayscale(1); opacity: .45; }
+
+.lesson { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; cursor: pointer; }
+.lesson:active { background: #f6f4ff; }
+.lesson .ic {
+  width: 46px; height: 46px; border-radius: 14px; flex: none;
+  display: grid; place-items: center; font-size: 24px; background: #f1eeff;
+}
+.reward-pill {
+  background: var(--up-bg); color: var(--up); font-weight: 600;
+  padding: 5px 10px; border-radius: 999px; font-size: 13px; white-space: nowrap;
+}
+
+.quiz-opt {
+  display: block; width: 100%; text-align: left; padding: 14px 16px;
+  border-radius: 14px; border: 2px solid #e6e2f7; background: #fff;
+  margin-bottom: 10px; font-size: 16px; font-weight: 500; color: var(--ink);
+}
+.quiz-opt.correct { border-color: var(--up); background: var(--up-bg); }
+.quiz-opt.wrong { border-color: var(--down); background: var(--down-bg); }
+
+.dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0; }
+.dots span { width: 8px; height: 8px; border-radius: 50%; background: #dcd6f5; }
+.dots span.on { background: var(--purple); width: 20px; border-radius: 4px; }

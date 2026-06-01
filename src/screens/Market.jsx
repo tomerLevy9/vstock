@@ -6,7 +6,7 @@ import { money, pct, signClass, arrow } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 
 export default function Market() {
-  const { STOCKS, prices, priceOf, pricesLoaded, follows, isFollowing, toggleFollow, addStockBySymbol } = useApp()
+  const { STOCKS, prices, priceOf, pricesLoaded, follows, isFollowing, toggleFollow, addStockBySymbol, refreshAllPrices } = useApp()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [tab, setTab] = useState('all') // 'all' | 'following'
@@ -15,6 +15,13 @@ export default function Market() {
   const [adding, setAdding] = useState(null)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
+
+  // Refresh the full browse list once when the Market opens (background polling only
+  // covers held/followed stocks to stay under the API rate limit).
+  useEffect(() => {
+    refreshAllPrices()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const matches = (s) =>
     s.name.toLowerCase().includes(q.toLowerCase()) || s.ticker.toLowerCase().includes(q.toLowerCase())

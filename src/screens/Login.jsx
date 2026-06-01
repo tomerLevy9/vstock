@@ -61,13 +61,13 @@ export default function Login() {
         {error && <div className="error-msg">{error}</div>}
 
         <button className="btn" type="submit" style={{ marginTop: 6 }}>
-          {tab === 'signup' ? 'Start with $50,000! 🚀' : 'Log In'}
+          {tab === 'signup' ? 'Start with $1,000! 🚀' : 'Log In'}
         </button>
       </form>
 
       {tab === 'signup' && (
         <p className="muted center" style={{ fontSize: 13, marginTop: 16 }}>
-          Everyone starts with $50,000 of pretend money to invest. No real money is used. 💜
+          Everyone starts with $1,000 of pretend money to invest. No real money is used. 💜
         </p>
       )}
     </div>

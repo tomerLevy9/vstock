@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext.jsx'
 import { getStock } from '../data/stocks.js'
+import { getLesson } from '../data/lessons.js'
 import { money, dateLabel } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 
@@ -18,6 +19,21 @@ export default function History() {
       ) : (
         <div className="card" style={{ padding: 6 }}>
           {history.map((t, i) => {
+            if (t.type === 'reward') {
+              const lesson = getLesson(t.lessonId)
+              return (
+                <div key={i} className="stock-row">
+                  <div className="logo-fallback" style={{ background: '#6c5ce7', fontSize: 22 }}>🎓</div>
+                  <div className="row-main">
+                    <div className="row-name">Lesson reward</div>
+                    <div className="row-sub">{lesson?.title || 'Learn & Earn'} · {dateLabel(t.at)}</div>
+                  </div>
+                  <div className="row-right">
+                    <div className="row-price up">+{money(t.total)}</div>
+                  </div>
+                </div>
+              )
+            }
             const stock = getStock(t.ticker)
             const isBuy = t.type === 'buy'
             return (
