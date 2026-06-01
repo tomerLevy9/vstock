@@ -24,7 +24,7 @@ export default function Market() {
 
   // Search the whole market (Finnhub) for stocks not already in our list.
   useEffect(() => {
-    if (tab !== 'all' || q.trim().length < 2) {
+    if (tab !== 'all' || q.trim().length < 1) {
       setMarketResults([])
       setSearching(false)
       return
@@ -124,7 +124,7 @@ export default function Market() {
       </div>
 
       {/* Add-a-new-stock results from the wider market */}
-      {tab === 'all' && q.trim().length >= 2 && (
+      {tab === 'all' && q.trim().length >= 1 && (
         <>
           <div className="section-title">Add a new stock</div>
           <div className="card" style={{ padding: 6 }}>
