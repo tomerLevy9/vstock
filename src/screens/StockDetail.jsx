@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { getStock } from '../data/stocks.js'
@@ -10,8 +10,15 @@ import PriceChart from '../components/PriceChart.jsx'
 export default function StockDetail({ onToast }) {
   const { ticker } = useParams()
   const navigate = useNavigate()
-  const { prices, priceOf, portfolio, isFollowing, toggleFollow } = useApp()
+  const { prices, priceOf, portfolio, isFollowing, toggleFollow, refreshOne } = useApp()
   const [trade, setTrade] = useState(null) // 'buy' | 'sell' | null
+
+  // Realtime: refresh this one stock from Finnhub on open and every 20s while viewing.
+  useEffect(() => {
+    refreshOne(ticker)
+    const id = setInterval(() => refreshOne(ticker), 20000)
+    return () => clearInterval(id)
+  }, [ticker, refreshOne])
 
   const stock = getStock(ticker)
   if (!stock) return <div className="page">Stock not found.</div>

@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { STOCKS as BASE_STOCKS, getStock, registerStock } from '../data/stocks.js'
-import { fetchAllPrices, lookupStock } from '../services/prices.js'
+import { fetchAllPrices, fetchRealtimeQuote, lookupStock } from '../services/prices.js'
 
 const STARTING_CASH = 1000
 const PRICE_REFRESH_MS = 60000 // every 60s — stays under Finnhub's free 60 calls/min limit
@@ -91,6 +91,12 @@ export function AppProvider({ children }) {
     setPrices((prev) => ({ ...prev, ...p }))
     setPricesLoaded(true)
   }, [allStocks])
+
+  // Realtime refresh for a single stock (used by the stock detail view).
+  const refreshOne = useCallback(async (ticker) => {
+    const q = await fetchRealtimeQuote(ticker)
+    if (q) setPrices((prev) => ({ ...prev, [ticker]: q }))
+  }, [])
 
   // ---- price polling ------------------------------------------------------
   useEffect(() => {
@@ -300,6 +306,7 @@ export function AppProvider({ children }) {
     pricesLoaded,
     priceOf,
     refreshAllPrices,
+    refreshOne,
     stocksValue,
     total,
     totalGain,
