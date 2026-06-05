@@ -6,7 +6,7 @@ import { money, moneyShort, pct, signClass, arrow } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 
 export default function Portfolio() {
-  const { portfolio, prices, priceOf, STARTING_CASH, total, totalGain, stocksValue } = useApp()
+  const { portfolio, prices, priceOf, STARTING_CASH, total, totalGain, stocksValue, currentLevel } = useApp()
   const navigate = useNavigate()
 
   const gainPct = (totalGain / STARTING_CASH) * 100
@@ -16,7 +16,10 @@ export default function Portfolio() {
   return (
     <div className="page">
       <div className="hero">
-        <div className="label">Your total worth</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="label">Your total worth</div>
+          <span className="hero-level">{currentLevel.icon} {currentLevel.name}</span>
+        </div>
         <div className="value">{money(total)}</div>
         <span className={`chip`}>
           {arrow(totalGain)} {money(Math.abs(totalGain))} ({pct(gainPct)})

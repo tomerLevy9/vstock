@@ -255,3 +255,27 @@ a { color: inherit; text-decoration: none; }
 .dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0; }
 .dots span { width: 8px; height: 8px; border-radius: 50%; background: #dcd6f5; }
 .dots span.on { background: var(--purple); width: 20px; border-radius: 4px; }
+
+/* ---- achievements / levels ---- */
+.level-pill {
+  display: inline-block; margin-top: 6px; padding: 6px 16px; border-radius: 999px;
+  background: #f1eeff; color: var(--purple); font-weight: 600; font-size: 15px;
+}
+.hero-level {
+  background: rgba(255, 255, 255, .2); padding: 5px 12px; border-radius: 999px;
+  font-weight: 600; font-size: 14px; white-space: nowrap;
+}
+.level-block { padding: 10px 2px; border-top: 1px solid #f0eef7; }
+.level-block:first-of-type { border-top: none; padding-top: 2px; }
+.level-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.level-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex: none;
+  display: grid; place-items: center; font-size: 24px; background: #f1eeff;
+}
+.level-ic.locked { filter: grayscale(1); opacity: .5; }
+.tasks { display: flex; flex-direction: column; gap: 8px; padding-left: 4px; }
+.task { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.task-label { flex: 1; }
+.task.done .task-label { color: var(--ink-soft); }
+.task-prog { font-weight: 600; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+.task.done .task-prog { color: var(--up); }

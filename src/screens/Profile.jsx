@@ -4,7 +4,10 @@ import { money, pct } from '../utils/format.js'
 import { LESSONS } from '../data/lessons.js'
 
 export default function Profile() {
-  const { displayName, avatar, total, totalGain, STARTING_CASH, logout, resetAccount, portfolio, isLessonDone, lessonsDone } = useApp()
+  const {
+    displayName, avatar, total, totalGain, STARTING_CASH, logout, resetAccount, portfolio,
+    isLessonDone, lessonsDone, LEVELS, levelStats, levelsUnlocked, currentLevel,
+  } = useApp()
   const [confirmReset, setConfirmReset] = useState(false)
   const gainPct = (totalGain / STARTING_CASH) * 100
   const trades = portfolio.history.length
@@ -16,7 +19,7 @@ export default function Profile() {
       <div className="card center">
         <div style={{ fontSize: 64 }}>{avatar}</div>
         <h2 style={{ margin: '4px 0' }}>{displayName}</h2>
-        <div className="muted">StockStars Trader</div>
+        <div className="level-pill">{currentLevel.icon} {currentLevel.name}</div>
       </div>
 
       <div className="card" style={{ marginTop: 14, display: 'flex', gap: 10, textAlign: 'center' }}>
@@ -32,6 +35,40 @@ export default function Profile() {
           <div className="muted" style={{ fontSize: 12 }}>Trades</div>
           <div style={{ fontWeight: 700 }}>{trades}</div>
         </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 14 }}>
+        <div className="muted" style={{ fontSize: 14, marginBottom: 10 }}>🏅 Achievements</div>
+        {LEVELS.map((level) => {
+          const done = levelsUnlocked.includes(level.id)
+          return (
+            <div key={level.id} className="level-block">
+              <div className="level-head">
+                <div className={`level-ic ${done ? '' : 'locked'}`}>{level.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div className="row-name">{level.name} {done && '✅'}</div>
+                  <div className="row-sub">{level.blurb}</div>
+                </div>
+              </div>
+              <div className="tasks">
+                {level.tasks.map((t) => {
+                  const cur = levelStats[t.metric] ?? 0
+                  const taskDone = cur >= t.goal
+                  const shown = t.unit === '%'
+                    ? `${Math.max(0, Math.round(cur))}% / ${t.goal}%`
+                    : `${Math.min(cur, t.goal)} / ${t.goal}`
+                  return (
+                    <div key={t.id} className={`task ${taskDone ? 'done' : ''}`}>
+                      <span>{taskDone ? '✅' : '⬜'}</span>
+                      <span className="task-label">{t.icon} {t.label}</span>
+                      <span className="task-prog">{shown}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="card" style={{ marginTop: 14 }}>

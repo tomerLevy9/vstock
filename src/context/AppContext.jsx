@@ -5,6 +5,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { STOCKS as BASE_STOCKS, getStock, registerStock } from '../data/stocks.js'
 import { fetchAllPrices, fetchRealtimeQuote, lookupStock } from '../services/prices.js'
+import { LEVELS, ROOKIE, isLevelComplete, currentLevel as pickLevel } from '../data/levels.js'
 
 const STARTING_CASH = 1000
 const PRICE_REFRESH_MS = 60000 // every 60s — stays under Finnhub's free 60 calls/min limit
@@ -43,6 +44,7 @@ const loadPortfolio = (key) => {
   const p = load(portfolioKey(key), freshPortfolio())
   if (!p.follows) p.follows = []
   if (!p.lessonsDone) p.lessonsDone = []
+  if (!p.levelsUnlocked) p.levelsUnlocked = []
   if (!localStorage.getItem(SNAPFIX_KEY)) p.snapshots = [] // drop jittery intraday history once
   return p
 }
@@ -54,6 +56,7 @@ const freshPortfolio = () => ({
   snapshots: [], // { at, value } portfolio value over time
   follows: [], // tickers the user follows
   lessonsDone: [], // ids of completed Learn & Earn lessons
+  levelsUnlocked: [], // ids of achievement levels reached
 })
 
 export function AppProvider({ children }) {
@@ -68,6 +71,7 @@ export function AppProvider({ children }) {
   })
   const [prices, setPrices] = useState({})
   const [pricesLoaded, setPricesLoaded] = useState(false)
+  const [levelUp, setLevelUp] = useState(null) // newly-reached level, for the celebration
 
   // Mark the one-time snapshot cleanup as done so it doesn't re-run next session.
   useEffect(() => {
@@ -135,6 +139,32 @@ export function AppProvider({ children }) {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prices, pricesLoaded, username])
+
+  // ---- achievement levels -------------------------------------------------
+  const leveledRef = useRef(false) // false until the first (silent) sync runs
+  useEffect(() => {
+    if (!portfolio) return
+    const stats = computeStats(portfolio, prices, STARTING_CASH)
+    const unlocked = portfolio.levelsUnlocked || []
+    const newly = LEVELS.filter((l) => !unlocked.includes(l.id) && isLevelComplete(l, stats))
+    if (!newly.length) {
+      leveledRef.current = true
+      return
+    }
+    setPortfolio((p) => ({
+      ...p,
+      levelsUnlocked: [...(p.levelsUnlocked || []), ...newly.map((l) => l.id)],
+    }))
+    // Celebrate only genuinely new unlocks (not the first load of an already-qualified account).
+    if (leveledRef.current) setLevelUp(newly[newly.length - 1])
+    leveledRef.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portfolio, prices])
+
+  // Reset the "first sync" guard when switching accounts.
+  useEffect(() => {
+    leveledRef.current = false
+  }, [username])
 
   // ---- auth ---------------------------------------------------------------
   const signup = useCallback(
@@ -316,6 +346,12 @@ export function AppProvider({ children }) {
     lessonsDone: portfolio?.lessonsDone || [],
     isLessonDone,
     completeLesson,
+    LEVELS,
+    levelStats: portfolio ? computeStats(portfolio, prices, STARTING_CASH) : {},
+    levelsUnlocked: portfolio?.levelsUnlocked || [],
+    currentLevel: pickLevel(portfolio?.levelsUnlocked || []),
+    levelUp,
+    dismissLevelUp: () => setLevelUp(null),
     addStockBySymbol,
     signup,
     login,
@@ -340,6 +376,20 @@ function holdingsValue(portfolio, prices) {
 
 function totalValue(portfolio, prices) {
   return round2(portfolio.cash + holdingsValue(portfolio, prices))
+}
+
+// Stats used to evaluate achievement-level quests.
+function computeStats(portfolio, prices, startingCash) {
+  const distinctBought = new Set(
+    portfolio.history.filter((h) => h.type === 'buy').map((h) => h.ticker),
+  ).size
+  const total = totalValue(portfolio, prices)
+  return {
+    distinctBought,
+    lessonsDone: portfolio.lessonsDone.length,
+    follows: portfolio.follows.length,
+    gainPct: ((total - startingCash) / startingCash) * 100,
+  }
 }
 
 function round2(n) {

@@ -9,9 +9,10 @@ import StockDetail from './screens/StockDetail.jsx'
 import History from './screens/History.jsx'
 import Profile from './screens/Profile.jsx'
 import Learn from './screens/Learn.jsx'
+import LevelUpModal from './components/LevelUpModal.jsx'
 
 export default function App() {
-  const { username } = useApp()
+  const { username, levelUp, dismissLevelUp } = useApp()
   const [toast, setToast] = useState('')
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <>
       {toast && <div className="toast">{toast}</div>}
+      {levelUp && <LevelUpModal level={levelUp} onClose={dismissLevelUp} />}
       <Layout>
         <Routes>
           <Route path="/" element={<Portfolio />} />
