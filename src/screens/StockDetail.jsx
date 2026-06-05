@@ -6,6 +6,7 @@ import { money, pct, signClass, arrow } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 import TradeModal from '../components/TradeModal.jsx'
 import PriceChart from '../components/PriceChart.jsx'
+import StockReportCard from '../components/StockReportCard.jsx'
 
 export default function StockDetail({ onToast }) {
   const { ticker } = useParams()
@@ -61,6 +62,8 @@ export default function StockDetail({ onToast }) {
       <div className="info-box" style={{ marginTop: 14 }}>
         {stock.blurb}
       </div>
+
+      <StockReportCard ticker={ticker} />
 
       {owned > 0 && (
         <div className="card" style={{ marginTop: 14, display: 'flex', gap: 12 }}>

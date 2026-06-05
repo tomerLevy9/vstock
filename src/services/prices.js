@@ -195,6 +195,56 @@ export async function lookupStock(symbol, fallbackName) {
   }
 }
 
+// Fundamentals for the kid-friendly "Stock Report Card" (market cap + P/E).
+// Cached per ticker for the session — these barely move during a day.
+const fundamentalsCache = {}
+export async function fetchFundamentals(ticker) {
+  const t = ticker.toUpperCase()
+  if (fundamentalsCache[t]) return fundamentalsCache[t]
+
+  let marketCap = null
+  let pe = null
+
+  // FMP quote returns both in one call (when configured).
+  if (FMP_KEY) {
+    try {
+      const res = await fetch(`${FMP}/quote/${t}?apikey=${FMP_KEY}`)
+      const arr = await res.json()
+      const q = Array.isArray(arr) ? arr[0] : null
+      if (q) {
+        if (q.marketCap != null) marketCap = q.marketCap
+        if (q.pe != null) pe = q.pe
+      }
+    } catch {
+      /* fall through to Finnhub */
+    }
+  }
+
+  // Finnhub fallback: profile2 for market cap (in millions), metric for P/E.
+  if (FINNHUB_KEY && marketCap == null) {
+    try {
+      const prof = await finnhubProfile(t)
+      if (prof?.marketCapitalization) marketCap = prof.marketCapitalization * 1e6
+    } catch {
+      /* ignore */
+    }
+  }
+  if (FINNHUB_KEY && pe == null) {
+    try {
+      const res = await fetch(`${FINNHUB}/stock/metric?symbol=${t}&metric=all&token=${FINNHUB_KEY}`)
+      const data = await res.json()
+      const m = data?.metric || {}
+      pe = m.peTTM ?? m.peBasicExclExtraTTM ?? null
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const result = { marketCap, pe }
+  if (marketCap != null || pe != null) fundamentalsCache[t] = result // don't cache total failures
+  return result
+}
+
 // ---- helpers --------------------------------------------------------------
 function titleCase(s) {
   if (!s) return s
