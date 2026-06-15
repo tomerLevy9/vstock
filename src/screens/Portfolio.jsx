@@ -52,14 +52,20 @@ export default function Portfolio() {
         </div>
       )}
 
-      <div className="card" style={{ marginTop: 14, display: 'flex', gap: 12 }}>
+      <div className="card" style={{ marginTop: 14, display: 'flex', gap: 10 }}>
         <div style={{ flex: 1 }}>
-          <div className="muted" style={{ fontSize: 13 }}>💵 Cash to spend</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{money(portfolio.cash)}</div>
+          <div className="muted" style={{ fontSize: 12 }}>💵 Cash</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{money(portfolio.cash)}</div>
         </div>
         <div style={{ flex: 1 }}>
-          <div className="muted" style={{ fontSize: 13 }}>📈 In stocks</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{money(stocksValue)}</div>
+          <div className="muted" style={{ fontSize: 12 }}>📈 In stocks</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{money(stocksValue)}</div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div className="muted" style={{ fontSize: 12 }}>🏆 Total profit</div>
+          <div className={signClass(totalGain)} style={{ fontSize: 18, fontWeight: 700 }}>
+            {totalGain >= 0 ? '+' : '-'}{money(Math.abs(totalGain))}
+          </div>
         </div>
       </div>
 
