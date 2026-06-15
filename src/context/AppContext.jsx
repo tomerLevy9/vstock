@@ -272,8 +272,8 @@ export function AppProvider({ children }) {
 
   const buy = useCallback(
     (ticker, shares) => {
-      shares = Math.floor(shares)
-      if (shares <= 0) return { error: 'Pick at least 1 share.' }
+      shares = roundShares(shares)
+      if (shares <= 0) return { error: 'Enter an amount first.' }
       const price = priceOf(ticker)
       const total = price * shares
       if (total > portfolio.cash) return { error: "You don't have enough cash for that." }
@@ -295,17 +295,22 @@ export function AppProvider({ children }) {
 
   const sell = useCallback(
     (ticker, shares) => {
-      shares = Math.floor(shares)
-      if (shares <= 0) return { error: 'Pick at least 1 share.' }
+      shares = roundShares(shares)
+      if (shares <= 0) return { error: 'Enter an amount first.' }
       const h = portfolio.holdings[ticker]
-      if (!h || h.shares < shares) return { error: "You don't own that many shares." }
+      if (!h) return { error: "You don't own this stock." }
+      // Tolerate tiny float drift when selling "all".
+      if (shares > h.shares) {
+        if (shares - h.shares < 1e-4) shares = h.shares
+        else return { error: "You don't own that many shares." }
+      }
       const price = priceOf(ticker)
       const total = price * shares
       setPortfolio((p) => {
         const cur = p.holdings[ticker]
-        const remaining = cur.shares - shares
+        const remaining = roundShares(cur.shares - shares)
         const holdings = { ...p.holdings }
-        if (remaining <= 0) delete holdings[ticker]
+        if (remaining <= 1e-6) delete holdings[ticker]
         else holdings[ticker] = { ...cur, shares: remaining }
         return {
           ...p,
@@ -394,4 +399,9 @@ function computeStats(portfolio, prices, startingCash) {
 
 function round2(n) {
   return Math.round(n * 100) / 100
+}
+
+// Shares are fractional, kept to 4 decimal places.
+function roundShares(n) {
+  return Math.round(n * 1e4) / 1e4
 }

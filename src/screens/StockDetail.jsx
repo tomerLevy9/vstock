@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { getStock } from '../data/stocks.js'
-import { money, pct, signClass, arrow } from '../utils/format.js'
+import { money, pct, signClass, arrow, sharesLabel } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 import TradeModal from '../components/TradeModal.jsx'
 import PriceChart from '../components/PriceChart.jsx'
@@ -69,7 +69,7 @@ export default function StockDetail({ onToast }) {
         <div className="card" style={{ marginTop: 14, display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div className="muted" style={{ fontSize: 13 }}>You own</div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{owned} {owned === 1 ? 'share' : 'shares'}</div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{sharesLabel(owned)}</div>
             <div className="muted" style={{ fontSize: 13 }}>{money(value)}</div>
           </div>
           <div style={{ flex: 1 }}>

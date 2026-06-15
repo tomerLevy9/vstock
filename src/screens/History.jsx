@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext.jsx'
 import { getStock } from '../data/stocks.js'
 import { getLesson } from '../data/lessons.js'
-import { money, dateLabel } from '../utils/format.js'
+import { money, dateLabel, sharesLabel } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 
 export default function History() {
@@ -41,7 +41,7 @@ export default function History() {
                 <StockLogo stock={stock} />
                 <div className="row-main">
                   <div className="row-name">
-                    {isBuy ? '🟢 Bought' : '🔴 Sold'} {t.shares} {t.shares === 1 ? 'share' : 'shares'}
+                    {isBuy ? '🟢 Bought' : '🔴 Sold'} {sharesLabel(t.shares)}
                   </div>
                   <div className="row-sub">{stock.name} · {dateLabel(t.at)}</div>
                 </div>

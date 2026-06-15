@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, ResponsiveContainer, YAxis, Tooltip } from 'recharts'
 import { useApp } from '../context/AppContext.jsx'
 import { getStock } from '../data/stocks.js'
-import { money, moneyShort, pct, signClass, arrow } from '../utils/format.js'
+import { money, moneyShort, pct, signClass, arrow, sharesLabel } from '../utils/format.js'
 import StockLogo from '../components/StockLogo.jsx'
 
 export default function Portfolio() {
@@ -84,7 +84,7 @@ export default function Portfolio() {
                 <StockLogo stock={stock} />
                 <div className="row-main">
                   <div className="row-name">{stock.name}</div>
-                  <div className="row-sub">{h.shares} {h.shares === 1 ? 'share' : 'shares'} · {money(price)}</div>
+                  <div className="row-sub">{sharesLabel(h.shares)} · {money(price)}</div>
                 </div>
                 <div className="row-right">
                   <div className="row-price">{money(value)}</div>

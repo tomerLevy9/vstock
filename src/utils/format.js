@@ -8,6 +8,13 @@ export const moneyShort = (n) =>
 
 export const pct = (n) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 
+// Shares can now be fractional. Show up to 4 decimals, trimming trailing zeros.
+export const formatShares = (n) => {
+  const r = Math.round((n + Number.EPSILON) * 1e4) / 1e4
+  return Number.isInteger(r) ? String(r) : String(r)
+}
+export const sharesLabel = (n) => `${formatShares(n)} ${n === 1 ? 'share' : 'shares'}`
+
 export const signClass = (n) => (n > 0 ? 'up' : n < 0 ? 'down' : 'flat')
 
 export const arrow = (n) => (n > 0 ? '▲' : n < 0 ? '▼' : '—')
